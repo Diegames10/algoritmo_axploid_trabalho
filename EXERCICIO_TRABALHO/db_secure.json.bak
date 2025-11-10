@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "username": "diego",
+      "password_hash": "pbkdf2:sha256:1000000$3jeBIh70aSVE9W1J$06e9c281b3a220e99b4f0721acffbba691597a1d38f1f06e7855ce8e16ba6864",
+      "created_at": "2025-11-10T01:02:00.327152",
+      "is_admin": false
+    },
+    {
+      "username": "admin",
+      "password_hash": "pbkdf2:sha256:1000000$D1VgSGTiJ7Kz3DBJ$0e4ec3eb50ea58973671611c83ded849d2291642ba31a1737d7dadb2411352db",
+      "created_at": "2025-11-10T01:12:00.371061",
+      "is_admin": true
+    }
+  ]
+}

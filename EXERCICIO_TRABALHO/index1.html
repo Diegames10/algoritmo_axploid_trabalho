@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Test Hub — Exploit API</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;max-width:900px}
+  input,button,select{padding:.6rem .8rem;border:1px solid #cbd5e1;border-radius:8px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  code,pre{background:#0f172a;color:#e2e8f0;padding:8px;border-radius:8px}
+  .ok{color:#059669}.warn{color:#b45309}.bad{color:#dc2626}
+</style>
+</head>
+<body>
+<h1>Test Hub — Exploit API</h1>
+<div class="card">
+  <div class="row">
+    <label for="baseUrl"><b>Base URL:</b></label>
+    <input id="baseUrl" style="min-width:360px" value="http://127.0.0.1:5000"/>
+    <button onclick="saveBase()">Salvar</button>
+  </div>
+  <p>Token atual: <span id="tokState">—</span></p>
+  <div class="row">
+    <button onclick="clearTok()">Limpar token</button>
+    <button onclick="location.reload()">Recarregar</button>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Páginas de teste</h3>
+  <ul>
+    <li><a href="login.html">Login / Registrar (gera token)</a></li>
+    <li><a href="profile.html">/profile (GET com Authorization)</a></li>
+    <li><a href="admin-log.html">/admin/log (GET admin + paginação)</a></li>
+    <li><a href="echo.html">/echo (POST — XSS reflexivo)</a></li>
+    <li><a href="upload.html">/upload (POST arquivo)</a></li>
+    <li><a href="view_upload.html">Ver upload (visualizar arquivo enviado)</a></li>
+    <li><a href="health.html">/health (GET)</a></li>
+  </ul>
+</div>
+
+<script>
+  const $ = sel => document.querySelector(sel);
+  function saveBase(){
+    localStorage.setItem('baseUrl', $('#baseUrl').value.trim());
+    alert('Base URL salva.');
+  }
+  function clearTok(){
+    localStorage.removeItem('token');
+    alert('Token removido.');
+    location.reload();
+  }
+  (function init(){
+    const base = localStorage.getItem('baseUrl') || 'http://127.0.0.1:5000';
+    $('#baseUrl').value = base;
+    const tok = localStorage.getItem('token');
+    $('#tokState').innerHTML = tok ? `<span class="ok">presente</span>` : `<span class="bad">ausente</span>`;
+  })();
+</script>
+</body>
+</html>

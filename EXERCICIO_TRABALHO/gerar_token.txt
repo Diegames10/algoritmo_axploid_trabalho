@@ -1,0 +1,2 @@
+$env:ADMIN_GENERATE_KEY = "algumSegredoLocalMuitoForte"
+python alg-test-corrigido.py

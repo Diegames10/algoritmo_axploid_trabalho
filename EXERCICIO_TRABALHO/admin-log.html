@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Admin Log — Exploit API</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;max-width:900px}
+  input,button{padding:.6rem .8rem;border:1px solid #cbd5e1;border-radius:8px}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  pre{background:#0f172a;color:#e2e8f0;padding:8px;border-radius:8px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h2>/admin/log — GET (admin)</h2>
+<div class="card">
+  <div class="row">
+    <label>Base URL</label>
+    <input id="baseUrl" value=""/>
+    <label>Token</label>
+    <input id="token" value=""/>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <label>limit</label><input id="limit" type="number" value="50" min="1" max="500"/>
+    <label>offset</label><input id="offset" type="number" value="0" min="0"/>
+    <button onclick="loadLog()">Carregar</button>
+  </div>
+</div>
+<div class="card">
+  <h3>Resposta</h3>
+  <pre id="out"></pre>
+</div>
+<script>
+  const $=s=>document.querySelector(s);
+  function init(){
+    $('#baseUrl').value = localStorage.getItem('baseUrl')||'http://127.0.0.1:5000';
+    $('#token').value = localStorage.getItem('token')||'';
+  }
+  function show(o){ $('#out').textContent = typeof o==='string'? o: JSON.stringify(o,null,2); }
+  async function loadLog(){
+    const base=$('#baseUrl').value.trim();
+    const tok=$('#token').value.trim();
+    const limit=$('#limit').value||50;
+    const offset=$('#offset').value||0;
+    const url=`${base}/admin/log?limit=${encodeURIComponent(limit)}&offset=${encodeURIComponent(offset)}`;
+    const res= await fetch(url,{headers:{'Authorization':`Bearer ${tok}`}});
+    show(await res.json());
+  }
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Login & Register — Exploit API</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px;background:#f9fafb;color:#111827}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;max-width:900px;background:#fff}
+  label{display:block;margin:.5rem 0 .25rem}
+  input,button{padding:.6rem .8rem;border:1px solid #cbd5e1;border-radius:8px;width:100%}
+  .row{display:grid;gap:8px;grid-template-columns:1fr 1fr 140px}
+  pre{background:#0f172a;color:#e2e8f0;padding:8px;border-radius:8px;white-space:pre-wrap}
+  .admin-label{display:flex;align-items:center;gap:8px;margin-top:6px}
+</style>
+</head>
+<body>
+<h2>Login & Registro de Usuário</h2>
+
+<div class="card">
+  <label>Base URL</label>
+  <input id="baseUrl"/>
+
+  <div class="row" style="margin-top:8px">
+    <input id="username" placeholder="username"/>
+    <input id="password" placeholder="password" type="password"/>
+    <button onclick="doRegister()">Registrar</button>
+  </div>
+
+  <div class="admin-label">
+    <input type="checkbox" id="adminCheck" style="width:auto"/>
+    <label for="adminCheck">Registrar como administrador (somente username “admin”)</label>
+  </div>
+
+  <div class="row" style="margin-top:8px">
+    <button onclick="doLogin()">Login</button>
+    <button onclick="saveTok()">Salvar token manual</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <label style="margin-top:8px">Token</label>
+  <input id="token"/>
+</div>
+
+<div class="card">
+  <h3>Resposta</h3>
+  <pre id="out"></pre>
+</div>
+
+<script>
+  const $ = s => document.querySelector(s);
+
+  function loadBase(){
+    const base = localStorage.getItem('baseUrl') || 'http://127.0.0.1:5000';
+    $('#baseUrl').value = base;
+    $('#token').value = localStorage.getItem('token') || '';
+  }
+
+  function show(o){ $('#out').textContent = typeof o==='string'? o: JSON.stringify(o,null,2); }
+
+  async function doRegister(){
+    const base = $('#baseUrl').value.trim();
+    const u = $('#username').value.trim();
+    const p = $('#password').value;
+    const makeAdmin = $('#adminCheck').checked && u.toLowerCase()==="admin";
+    const url = makeAdmin ? `${base}/register?make_admin=1` : `${base}/register`;
+
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:u,password:p})
+    });
+    const data = await res.json();
+    show(data);
+  }
+
+  async function doLogin(){
+    const base = $('#baseUrl').value.trim();
+    const u = $('#username').value.trim();
+    const p = $('#password').value;
+
+    const res = await fetch(`${base}/login`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:u,password:p})
+    });
+
+    const data = await res.json();
+    show(data);
+    if(data.token){
+      $('#token').value = data.token;
+      localStorage.setItem('token', data.token);
+      alert('Token salvo no localStorage.');
+    }
+  }
+
+  function saveTok(){
+    const t = $('#token').value.trim();
+    if(!t) return alert('Informe um token.');
+    localStorage.setItem('token', t);
+    alert('Token salvo.');
+  }
+
+  async function logout(){
+    const base = $('#baseUrl').value.trim();
+    const token = localStorage.getItem('token');
+    if(!token) return alert('Sem token ativo.');
+    const res = await fetch(`${base}/logout`, {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${token}`}
+    });
+    const data = await res.json();
+    show(data);
+    localStorage.removeItem('token');
+    $('#token').value = '';
+    alert('Logout efetuado.');
+  }
+
+  loadBase();
+</script>
+</body>
+</html>

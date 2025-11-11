@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Health — Exploit API</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;max-width:900px}
+  input,button{padding:.6rem .8rem;border:1px solid #cbd5e1;border-radius:8px}
+  pre{background:#0f172a;color:#e2e8f0;padding:8px;border-radius:8px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h2>/health — GET</h2>
+<div class="card">
+  <label>Base URL</label>
+  <input id="baseUrl"/>
+  <button onclick="check()">Checar</button>
+</div>
+<div class="card">
+  <h3>Resposta</h3>
+  <pre id="out"></pre>
+</div>
+<script>
+  const $=s=>document.querySelector(s);
+  function init(){ $('#baseUrl').value = localStorage.getItem('baseUrl')||'http://127.0.0.1:5000'; }
+  function show(o){ $('#out').textContent = typeof o==='string'? o: JSON.stringify(o,null,2); }
+  async function check(){
+    const base=$('#baseUrl').value.trim();
+    const res= await fetch(`${base}/health`);
+    show(await res.json());
+  }
+  init();
+</script>
+</body>
+</html>

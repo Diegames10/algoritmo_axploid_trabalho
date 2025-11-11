@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Echo — Exploit API</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;max-width:900px}
+  textarea{width:100%;min-height:120px;padding:.6rem .8rem;border:1px solid #cbd5e1;border-radius:8px}
+  input,button{padding:.6rem .8rem;border:1px solid #cbd5e1;border-radius:8px}
+  pre{background:#0f172a;color:#e2e8f0;padding:8px;border-radius:8px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h2>/echo — POST</h2>
+<div class="card">
+  <label>Base URL</label>
+  <input id="baseUrl"/>
+  <label style="margin-top:8px">Payload (será enviado como JSON: {"message": "..."})</label>
+  <textarea id="msg">{ "message": "<script>alert('xss')</script>" }</textarea>
+  <div style="margin-top:8px">
+    <button onclick="send()">Enviar</button>
+  </div>
+</div>
+<div class="card">
+  <h3>Resposta</h3>
+  <pre id="out"></pre>
+</div>
+<script>
+  const $=s=>document.querySelector(s);
+  function init(){ $('#baseUrl').value = localStorage.getItem('baseUrl')||'http://127.0.0.1:5000'; }
+  function show(o){ $('#out').textContent = typeof o==='string'? o: JSON.stringify(o,null,2); }
+  async function send(){
+    const base=$('#baseUrl').value.trim();
+    let body;
+    try{ body = JSON.parse($('#msg').value); }catch(e){ return alert('JSON inválido no payload.'); }
+    const res= await fetch(`${base}/echo`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    show(await res.json());
+  }
+  init();
+</script>
+</body>
+</html>

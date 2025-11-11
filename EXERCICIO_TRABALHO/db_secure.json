@@ -7,10 +7,44 @@
       "is_admin": false
     },
     {
+      "username": "diego2",
+      "password_hash": "pbkdf2:sha256:1000000$UVboqxUadXDSbVdg$b9dc71dab7124aed5ff5a2967abcec2c05479cda4d648ce43be1da3d0071e4c4",
+      "created_at": "2025-11-11T15:57:15.457871",
+      "is_admin": false
+    },
+    {
+      "username": "diego3",
+      "password_hash": "pbkdf2:sha256:1000000$dVPAXr5aYaqNcUQt$afa52064087c9c21e542b6b35282db4976b8750ffa46af4f2bb29053dce6c461",
+      "created_at": "2025-11-11T16:05:32.468160",
+      "is_admin": false
+    },
+    {
+      "username": "diego4",
+      "password_hash": "pbkdf2:sha256:1000000$Ku8lNLqJ0wziKwWt$f1c62ba442a7e87a1b64b1cc18ac98c561b357124a7ea80b597b25004ee9cfb4",
+      "created_at": "2025-11-11T16:09:15.149657",
+      "is_admin": false
+    },
+    {
       "username": "admin",
-      "password_hash": "pbkdf2:sha256:1000000$D1VgSGTiJ7Kz3DBJ$0e4ec3eb50ea58973671611c83ded849d2291642ba31a1737d7dadb2411352db",
-      "created_at": "2025-11-10T01:12:00.371061",
+      "password_hash": "pbkdf2:sha256:1000000$nlq0U6fYchiyTlee$c47a5921a9ab88f63592724de512668daf2401cd7bcb72fafd7063b07e23afee",
+      "created_at": "2025-11-11T16:10:58.893474",
       "is_admin": true
+    }
+  ],
+  "uploads": [
+    {
+      "filename": "598ebe09840e47a395ab38a59d62fe79.jpg",
+      "original_name": "PSEUDO_CODIGO_DE_INSERTION_SORT.jpg",
+      "owner": "admin",
+      "content_type": "image/jpeg",
+      "created_at": "2025-11-11T17:36:24.409633"
+    },
+    {
+      "filename": "6c1a9df90d984e49b5cacd8ee3ac571b.jpg",
+      "original_name": "automotive-motor1com-italia-20-2.jpg",
+      "owner": "diego4",
+      "content_type": "image/jpeg",
+      "created_at": "2025-11-11T17:38:43.404239"
     }
   ]
 }

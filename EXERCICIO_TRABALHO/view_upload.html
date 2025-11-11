@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<title>Lista de Uploads — Exploit API</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px;background:#f7fafc;color:#111827}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;background:#fff;max-width:1100px}
+  input,button,select{padding:.6rem .8rem;border:1px solid #cbd5e1;border-radius:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:12px}
+  .thumb{border:1px solid #e2e8f0;border-radius:8px;padding:8px;background:#ffffff;display:flex;flex-direction:column;align-items:center}
+  .thumb img{max-width:100%;height:120px;object-fit:cover;border-radius:6px}
+  .meta{font-size:12px;color:#374151;margin-top:8px;text-align:center}
+  .actions{display:flex;gap:8px;margin-top:8px}
+  .small{padding:.3rem .5rem;font-size:.85rem}
+  .note{font-size:13px;color:#6b7280}
+  .err{color:#b91c1c}
+</style>
+</head>
+<body>
+<h2>Meus Uploads / Admin Uploads</h2>
+
+<div class="card">
+  <label>Base URL</label>
+  <input id="baseUrl" value="http://127.0.0.1:5000" style="width:60%"/>
+  <label style="margin-top:8px">Token (Authorization: Bearer ...)</label>
+  <input id="token" style="width:60%"/>
+  <div style="margin-top:8px">
+    <button onclick="loadList()">Listar uploads</button>
+    <button onclick="autoFillToken()">Usar token do localStorage</button>
+  </div>
+
+  <p class="note">
+    Endpoints usados na listagem (em ordem): 
+    <code>/list_uploads?all=1</code> (admin), 
+    <code>/user/uploads</code> (usuário),
+    <code>/admin/uploads</code> (admin),
+    <code>/list_uploads</code> (fallback).
+  </p>
+
+  <div id="status" style="margin-top:8px"></div>
+</div>
+
+<div class="card">
+  <h3>Imagens encontradas</h3>
+  <div id="grid" class="grid"></div>
+  <div id="noresults" style="margin-top:12px"></div>
+</div>
+
+<script>
+  const $ = s => document.querySelector(s);
+
+  function autoFillToken(){
+    const t = localStorage.getItem('token');
+    if(!t) return alert('Não há token no localStorage. Faça login primeiro.');
+    $('#token').value = t;
+    alert('Token preenchido.');
+  }
+
+  function showStatus(msg, isError=false){
+    $('#status').innerHTML = `<span class="${isError?'err':''}">${msg}</span>`;
+  }
+
+  function clearGrid(){
+    $('#grid').innerHTML = '';
+    $('#noresults').textContent = '';
+  }
+
+  function fileUrl(base, filename){
+    return base.replace(/\/+$/,'') + '/uploads/' + encodeURIComponent(filename);
+  }
+
+  async function fetchWithAuth(url, opts = {}){
+    const token = $('#token').value.trim();
+    if(!token) throw 'Token ausente';
+    const headers = opts.headers || {};
+    headers['Authorization'] = 'Bearer ' + token;
+    opts.headers = headers;
+    return fetch(url, opts);
+  }
+
+  async function setImageWithAuth(imgElem, url){
+    const res = await fetchWithAuth(url);
+    if(!res.ok) throw new Error('Erro ao carregar imagem: ' + res.status);
+    const blob = await res.blob();
+    const objUrl = URL.createObjectURL(blob);
+    imgElem.src = objUrl;
+  }
+
+  function renderUploads(base, uploads){
+    clearGrid();
+    if(!uploads || uploads.length === 0){
+      $('#noresults').textContent = 'Nenhum upload encontrado.';
+      return;
+    }
+
+    const grid = $('#grid');
+    uploads.forEach(u => {
+      const filename = u.filename || u.path || u.file || u.name;
+      const original = u.original_name || u.original || u.originalName || '';
+      const owner = u.owner || u.username || '—';
+      const ct = (u.content_type || '').toLowerCase();
+      const created = u.created_at || u.created || '';
+
+      const url = fileUrl(base, filename);
+      const div = document.createElement('div');
+      div.className = 'thumb';
+
+      // Se for imagem, carrega via fetch + blob (para enviar Authorization)
+      if(ct.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(original || filename || '')) {
+        const img = document.createElement('img');
+        img.alt = original || filename;
+        div.appendChild(img);
+        setImageWithAuth(img, url).catch(err => {
+          div.innerHTML = `<div class="meta" style="color:#b91c1c">Falha ao carregar thumbnail: ${String(err)}</div>`;
+        });
+      } else {
+        const placeholder = document.createElement('div');
+        placeholder.style = 'width:100%;height:120px;display:flex;align-items:center;justify-content:center;color:#6b7280';
+        placeholder.textContent = 'Não é imagem';
+        div.appendChild(placeholder);
+      }
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `<strong>${original || filename}</strong><div>owner: ${owner}</div><div>${created}</div>`;
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const btnView = document.createElement('button');
+      btnView.className = 'small';
+      btnView.textContent = 'Abrir';
+      btnView.onclick = () => {
+        fetchWithAuth(url).then(result => {
+          if(!result.ok) return alert('Erro ao abrir arquivo: ' + result.status);
+          result.blob().then(b => {
+            const obj = URL.createObjectURL(b);
+            window.open(obj, '_blank');
+          });
+        }).catch(e => alert('Erro: ' + e));
+      };
+
+      const btnDl = document.createElement('a');
+      btnDl.className = 'small';
+      btnDl.textContent = 'Baixar';
+      btnDl.href = '#';
+      btnDl.onclick = (e) => {
+        e.preventDefault();
+        fetchWithAuth(url).then(result => {
+          if(!result.ok) return alert('Erro ao baixar: ' + result.status);
+          result.blob().then(b => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(b);
+            a.download = original || filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          });
+        }).catch(err => alert('Erro: ' + err));
+      };
+
+      actions.appendChild(btnView);
+      actions.appendChild(btnDl);
+
+      div.appendChild(meta);
+      div.appendChild(actions);
+      grid.appendChild(div);
+    });
+  }
+
+  async function loadList(){
+    clearGrid();
+    showStatus('Listando uploads...');
+    const base = $('#baseUrl').value.trim().replace(/\/+$/,'');
+    const token = $('#token').value.trim();
+    if(!token) return showStatus('Informe token (use login.html).', true);
+
+    // ordem de tentativas: admin-all, user, admin, fallback
+    const tryOrder = [
+      {url: base + '/list_uploads?all=1', desc: 'list_uploads (todos, admin)'},
+      {url: base + '/user/uploads',       desc: 'user/uploads (meus uploads)'},
+      {url: base + '/admin/uploads',      desc: 'admin/uploads (todos)'},
+      {url: base + '/list_uploads',       desc: 'list_uploads (meus uploads)'}
+    ];
+
+    for(const candidate of tryOrder){
+      try{
+        const res = await fetchWithAuth(candidate.url);
+        if(res.status === 401){
+          showStatus(`Não autorizado ao tentar ${candidate.desc} (401).`, true);
+          continue;
+        }
+        if(res.status === 403){
+          // esperado se não for admin em endpoints admin-only
+          showStatus(`Proibido (403) ao tentar ${candidate.desc}.`, true);
+          continue;
+        }
+        if(res.status === 404){
+          showStatus(`${candidate.desc} não encontrado (404). Tentando próximo...`);
+          continue;
+        }
+        if(!res.ok){
+          showStatus(`Erro ${res.status} ao chamar ${candidate.desc}. Tentando próximo...`, true);
+          continue;
+        }
+        const data = await res.json();
+        let uploads = Array.isArray(data) ? data :
+                      data.uploads ? data.uploads :
+                      data.result  ? data.result  :
+                      data.items   ? data.items   : [data];
+        showStatus(`Carregado via ${candidate.desc} — ${uploads.length} items.`);
+        const images = uploads.filter(u => {
+          const ct = (u.content_type||'').toLowerCase();
+          const name = (u.filename||u.path||u.original_name||'').toLowerCase();
+          return ct.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(name);
+        });
+        renderUploads(base, images.length ? images : uploads);
+        return;
+      }catch(err){
+        console.warn('Erro ao tentar', candidate.url, err);
+        showStatus(`Erro ao tentar ${candidate.desc}: ${err}`, true);
+        continue;
+      }
+    }
+
+    showStatus('Nenhum endpoint de listagem disponível/permitido. Verifique seu token (admin vs user) e as rotas do servidor.', true);
+    $('#noresults').textContent = 'Certifique-se de que /user/uploads, /admin/uploads e /list_uploads estão implementados.';
+  }
+
+  (function init(){
+    const base = localStorage.getItem('baseUrl') || 'http://127.0.0.1:5000';
+    $('#baseUrl').value = base;
+    const t = localStorage.getItem('token') || '';
+    $('#token').value = t;
+  })();
+</script>
+</body>
+</html>
